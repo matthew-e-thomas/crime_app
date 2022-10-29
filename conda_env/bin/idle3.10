@@ -1,5 +1,0 @@
-#!/Users/matthewthomas/Projects/crime_app/conda_env/bin/python3.10
-
-from idlelib.pyshell import main
-if __name__ == '__main__':
-    main()
