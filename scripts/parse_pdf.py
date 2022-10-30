@@ -18,13 +18,16 @@ def extract_components(file_path: Path = DATA_PATH / 'crime_report_8.2.2022.pdf'
     :return: dictionary of dates and addresses
     '''
     text = parse_pdf(file_path)
+    CATEGORY_RE = re.compile(r'.*(?=:)')
     ADDRESS_RE = re.compile(r'\d{1,5}[\s\w]*(?=,)')
     DATE_RE = re.compile(r'\d{1,2}\/\d{1,2}')
-    TEXT_AFTER_DATE_RE = re.compile(r"(?<=\d{1},)[^,]*$")
-    addresses = ADDRESS_RE.findall(text)
-    dates = DATE_RE.findall(text)
-    descriptions = TEXT_AFTER_DATE_RE.findall(text)
-    report_dict = {'addresses': addresses, 'dates': dates, 'descriptions': descriptions}
+    TEXT_AFTER_DATE_RE = re.compile(r"[^,]*$")
+    text_reduced = re.sub(r'Arrests:((.|\n)*)', '', text)   # remove arrests
+    addresses = ADDRESS_RE.findall(text_reduced)
+    dates = DATE_RE.findall(text_reduced)
+    descriptions = TEXT_AFTER_DATE_RE.findall(text_reduced)
+    categories = CATEGORY_RE.findall(text_reduced)
+    report_dict = {'category': categories, 'addresses': addresses, 'dates': dates, 'descriptions': descriptions}
     print(report_dict)
     return report_dict
 
