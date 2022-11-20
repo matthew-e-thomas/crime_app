@@ -5,6 +5,10 @@ import typer
 
 DATA_PATH = Path('../data')
 
+CATEGORY_RE = re.compile(r'(.*)(?=:)')
+ADDRESS_RE = re.compile(r'\d{1,5}[\s\w]+(?=,\s\d)')
+DATE_RE = re.compile(r'(\d{1,2}\/\d{1,2}).{3}(\d{1,2}\/\d{1,2})?')
+TEXT_AFTER_DATE_RE = re.compile(r"(?<=\d,)\s*([^\.]*)")
 
 def parse_pdf(file_path: Path) -> str:
     text = extract_text(file_path)
@@ -18,21 +22,24 @@ def extract_components(file_path: Path = DATA_PATH / 'crime_report_8.2.2022.pdf'
     :return: dictionary of dates and addresses
     '''
     text = parse_pdf(file_path)
-    CATEGORY_RE = re.compile(r'.*(?=:)')
-    ADDRESS_RE = re.compile(r'\d{1,5}[\s\w]+(?=,\s\d)')
-    DATE_RE = re.compile(r'(\d{1,2}\/\d{1,2}).{3}(\d{1,2}\/\d{1,2})?')
-    TEXT_AFTER_DATE_RE = re.compile(r"(?<=\d,)\s*([^\.]*)")
+
     text_reduced = re.sub(r'Arrests:((.|\n)*)', '', text)   # remove arrests
     text_reduced = re.sub(r'(Crime.*)', '', text_reduced)   # remove header Crime Report
-    addresses = ADDRESS_RE.findall(text_reduced)
-    dates = DATE_RE.findall(text_reduced)
-    descriptions = TEXT_AFTER_DATE_RE.findall(text_reduced)
-    descriptions = [text.replace('\n', '') for text in descriptions]
-    categories = CATEGORY_RE.findall(text_reduced)
-    report_dict = {'category': categories, 'addresses': addresses, 'dates': dates, 'descriptions': descriptions}
-    print (len(dates), len(addresses), len(descriptions), len(categories))
-    print(addresses)
-    return report_dict
+    headers = re.findall(CATEGORY_RE, text_reduced)         # find headers
+    cleaned_headers = [header.strip() for header in headers if header != '']  # remove whitespace
+    for i, text in enumerate(cleaned_headers):
+
+        main_body = re.match(re.escape(text) + r'((.|\n)*)' + re.escape(text), text_reduced)
+        print(main_body)
+    # addresses = ADDRESS_RE.findall(text_reduced)
+    # dates = DATE_RE.findall(text_reduced)
+    # descriptions = TEXT_AFTER_DATE_RE.findall(text_reduced)
+    # descriptions = [text.replace('\n', '') for text in descriptions]
+    # categories = CATEGORY_RE.findall(text_reduced)
+    # report_dict = {'category': categories, 'addresses': addresses, 'dates': dates, 'descriptions': descriptions}
+    # print (len(dates), len(addresses), len(descriptions), len(categories))
+    # print(addresses)
+    # return report_dict
 
 
 if __name__ == '__main__':
