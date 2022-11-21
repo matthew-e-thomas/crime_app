@@ -24,12 +24,12 @@ def extract_components(file_path: Path = DATA_PATH / 'crime_report_8.2.2022.pdf'
     text = parse_pdf(file_path)
 
     text_reduced = re.sub(r'Arrests:((.|\n)*)', '', text)   # remove arrests
-    text_reduced = re.sub(r'(Crime.*)', '', text_reduced)   # remove header Crime Report
+    text_reduced = re.sub(r'(Crime.*)', '', text_reduced)
     headers = re.findall(CATEGORY_RE, text_reduced)         # find headers
-    cleaned_headers = [header.strip() for header in headers if header != '']  # remove whitespace
+    cleaned_headers = [header.strip() for header in headers if header != '']
     for i, text in enumerate(cleaned_headers):
-
-        main_body = re.match(re.escape(text) + r'((.|\n)*)' + re.escape(text), text_reduced)
+        regex_string = re.escape(cleaned_headers[i]) + r'(.|\n)*?' + re.escape(cleaned_headers[i+1])
+        main_body = re.search(regex_string, text_reduced).group()
         print(main_body)
     # addresses = ADDRESS_RE.findall(text_reduced)
     # dates = DATE_RE.findall(text_reduced)
