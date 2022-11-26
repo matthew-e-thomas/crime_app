@@ -18,7 +18,7 @@ def parse_pdf(file_path: Path) -> str:
 
 def extract_components(file_path: Path = DATA_PATH / 'crime_report_8.2.2022.pdf') -> dict:
     '''
-    Uses regular expressions to extract dates and addresses from the text
+    Uses regular expressions to extract dates, addresses, crime descriptions from the text
     :param text:
     :return: dictionary of dates and addresses
     '''
@@ -41,13 +41,29 @@ def extract_components(file_path: Path = DATA_PATH / 'crime_report_8.2.2022.pdf'
         dates = DATE_RE.findall(main_body)
         descriptions = TEXT_AFTER_DATE_RE.findall(main_body)
         descriptions = [text.replace('\n', '') for text in descriptions]
-        category = CATEGORY_RE.match(main_body)
-        category_dict = {'category': category.group(), 'addresses': addresses, 'dates': dates, 'descriptions': descriptions}
+        category = CATEGORY_RE.match(main_body).group()
+        category_dict = {'category': category, 'addresses': addresses, 'dates': dates, 'descriptions': descriptions}
         for key, value in category_dict.items():
             report_dict[key].append(value)
-    print(len(report_dict['category']), len(report_dict['addresses']), len(report_dict['dates']), len(report_dict['descriptions']))
+
+    # print(report_dict)
     return report_dict
 
+def create_json_schema() -> dict:
+    '''
+    Creates a json schema from the dictionary of dates, addresses, and crime descriptions
+    :param report_dict:
+    :return: json schema
+    '''
+    report_dict = extract_components()
+    json_schema = {'crime_report': []}
+    for i, category in enumerate(report_dict['category']):
+        json_schema['crime_report'].append({'category': category,
+                                           'addresses': report_dict['addresses'][i],
+                                           'dates': report_dict['dates'][i],
+                                           'description': report_dict['descriptions'][i]})
+    print(json_schema)
+    return json_schema
 
 if __name__ == '__main__':
-    typer.run(extract_components)
+    typer.run(create_json_schema)
