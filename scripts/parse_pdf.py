@@ -3,11 +3,15 @@ from pathlib import Path
 import re
 import typer
 from collections import defaultdict
+from pandas import DataFrame
+from datetime import date
+from srsly import write_json
 
-DATA_PATH = Path('../data')
+DATA_PATH = Path('../data/pdfs')
+REPORT_PATH = Path(f'../data/json_reports/crime_report_{date.today()}.json')
 
 CATEGORY_RE = re.compile(r'(.*)(?=:)')
-ADDRESS_RE = re.compile(r'\d{1,5}[\s\w]+(?=,\s\d)')
+ADDRESS_RE = re.compile(r'(\d{1,5}.+)(?=,\s\d)')
 DATE_RE = re.compile(r'(\d{1,2}\/\d{1,2}).{3}(\d{1,2}\/\d{1,2})?')
 TEXT_AFTER_DATE_RE = re.compile(r"(?<=\d,)\s*([^\.]*)")
 
@@ -49,21 +53,17 @@ def extract_components(file_path: Path = DATA_PATH / 'crime_report_8.2.2022.pdf'
     # print(report_dict)
     return report_dict
 
-def create_json_schema() -> dict:
+def create_json_schema() -> None:
     '''
     Creates a json schema from the dictionary of dates, addresses, and crime descriptions
     :param report_dict:
     :return: json schema
     '''
     report_dict = extract_components()
-    json_schema = {'crime_report': []}
-    for i, category in enumerate(report_dict['category']):
-        json_schema['crime_report'].append({'category': category,
-                                           'addresses': report_dict['addresses'][i],
-                                           'dates': report_dict['dates'][i],
-                                           'description': report_dict['descriptions'][i]})
-    print(json_schema)
-    return json_schema
+    df = DataFrame(report_dict)
+    df = df.explode(['addresses', 'dates'])
+    df.to_json(REPORT_PATH, orient='records')
+
 
 if __name__ == '__main__':
     typer.run(create_json_schema)
