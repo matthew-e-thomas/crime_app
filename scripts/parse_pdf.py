@@ -3,7 +3,7 @@ from pathlib import Path
 import re
 import typer
 from collections import defaultdict
-from pandas import DataFrame
+from pandas import DataFrame, to_datetime
 from datetime import date
 from srsly import write_json
 
@@ -12,7 +12,7 @@ REPORT_PATH = Path(f'../data/json_reports/crime_report_{date.today()}.json')
 
 CATEGORY_RE = re.compile(r'(.*)(?=:)')
 ADDRESS_RE = re.compile(r'(\d{1,5}.+)(?=,\s\d)')
-DATE_RE = re.compile(r'(\d{1,2}\/\d{1,2}).{3}(\d{1,2}\/\d{1,2})?')
+DATE_RE = re.compile(r'(\d{1,2}\/\d{1,2}).{1,3}(\d{1,2}\/\d{1,2})?')
 TEXT_AFTER_DATE_RE = re.compile(r"(?<=\d,)\s*([^\.]*)")
 
 def parse_pdf(file_path: Path) -> str:
@@ -43,6 +43,11 @@ def extract_components(file_path: Path = DATA_PATH / 'crime_report_8.2.2022.pdf'
             main_body = re.search(re.escape(cleaned_headers[i]) + r'(.|\n)*', text_reduced).group()
         addresses = ADDRESS_RE.findall(main_body)
         dates = DATE_RE.findall(main_body)
+        for i, date in enumerate(dates):
+            if date[1] != '':
+                dates[i] = date[0] + '-' + date[1]
+            else:
+                dates[i] = date[0] + '/2022'
         descriptions = TEXT_AFTER_DATE_RE.findall(main_body)
         descriptions = [text.replace('\n', '') for text in descriptions]
         category = CATEGORY_RE.match(main_body).group()
@@ -62,8 +67,9 @@ def create_json_schema() -> None:
     report_dict = extract_components()
     df = DataFrame(report_dict)
     df = df.explode(['addresses', 'dates'])
-    df.to_json(REPORT_PATH, orient='records')
-
+    df['dates'] = to_datetime(df['dates'])
+    result = df.to_dict()
+    write_json(REPORT_PATH, result)
 
 if __name__ == '__main__':
     typer.run(create_json_schema)
