@@ -3,12 +3,11 @@ from pathlib import Path
 import re
 import typer
 from collections import defaultdict
-from pandas import DataFrame, to_datetime
+import pandas as pd
 from datetime import date
-from srsly import write_json
 
 DATA_PATH = Path('../data/pdfs')
-REPORT_PATH = Path(f'../data/json_reports/crime_report_{date.today()}.json')
+REPORT_PATH = Path(f'../data/json_reports/crime_report_{date.today()}.csv')
 
 CATEGORY_RE = re.compile(r'(.*)(?=:)')
 ADDRESS_RE = re.compile(r'(\d{1,5}.+)(?=,\s\d)')
@@ -43,11 +42,13 @@ def extract_components(file_path: Path = DATA_PATH / 'crime_report_8.2.2022.pdf'
             main_body = re.search(re.escape(cleaned_headers[i]) + r'(.|\n)*', text_reduced).group()
         addresses = ADDRESS_RE.findall(main_body)
         dates = DATE_RE.findall(main_body)
-        for i, date in enumerate(dates):
+        for idx, date in enumerate(dates):
             if date[1] != '':
-                dates[i] = date[0] + '-' + date[1]
+                datetime_range = pd.date_range(start=date[0] + '/2022', end=date[1] + '/2022').to_series().tolist()
+                datetime_range_str = [date.strftime('%m/%d/%Y') for date in datetime_range]
+                dates[idx] = datetime_range_str[0]
             else:
-                dates[i] = date[0] + '/2022'
+                dates[idx] = date[0] + '/2022'
         descriptions = TEXT_AFTER_DATE_RE.findall(main_body)
         descriptions = [text.replace('\n', '') for text in descriptions]
         category = CATEGORY_RE.match(main_body).group()
@@ -58,18 +59,16 @@ def extract_components(file_path: Path = DATA_PATH / 'crime_report_8.2.2022.pdf'
     # print(report_dict)
     return report_dict
 
-def create_json_schema() -> None:
+def create_csv() -> None:
     '''
     Creates a json schema from the dictionary of dates, addresses, and crime descriptions
     :param report_dict:
-    :return: json schema
+    :return: csv file
     '''
     report_dict = extract_components()
-    df = DataFrame(report_dict)
-    df = df.explode(['addresses', 'dates'])
-    df['dates'] = to_datetime(df['dates'])
-    result = df.to_dict()
-    write_json(REPORT_PATH, result)
+    df = pd.DataFrame(report_dict)
+    df = df.explode(['addresses', 'dates', 'descriptions'])
+    df.to_csv(REPORT_PATH, index=False)
 
 if __name__ == '__main__':
-    typer.run(create_json_schema)
+    typer.run(create_csv)
