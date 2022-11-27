@@ -7,7 +7,7 @@ import pandas as pd
 from datetime import date
 
 DATA_PATH = Path('../data/pdfs')
-REPORT_PATH = Path(f'../data/json_reports/crime_report_{date.today()}.csv')
+REPORT_PATH = Path(f'../data/csv_reports/crime_report_{date.today()}.csv')
 
 CATEGORY_RE = re.compile(r'(.*)(?=:)')
 ADDRESS_RE = re.compile(r'(\d{1,5}.+)(?=,\s\d)')
@@ -52,7 +52,7 @@ def extract_components(file_path: Path = DATA_PATH / 'crime_report_8.2.2022.pdf'
         descriptions = TEXT_AFTER_DATE_RE.findall(main_body)
         descriptions = [text.replace('\n', '') for text in descriptions]
         category = CATEGORY_RE.match(main_body).group()
-        category_dict = {'category': category, 'addresses': addresses, 'dates': dates, 'descriptions': descriptions}
+        category_dict = {'category': category, 'address': addresses, 'date': dates, 'description': descriptions}
         for key, value in category_dict.items():
             report_dict[key].append(value)
 
@@ -67,8 +67,8 @@ def create_csv() -> None:
     '''
     report_dict = extract_components()
     df = pd.DataFrame(report_dict)
-    df = df.explode(['addresses', 'dates', 'descriptions'])
-    df.to_csv(REPORT_PATH, index=False)
+    df = df.explode(['address', 'date', 'description'])
+    df.to_csv(REPORT_PATH, index=False, header=False)
 
 if __name__ == '__main__':
     typer.run(create_csv)
