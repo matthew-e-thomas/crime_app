@@ -4,7 +4,7 @@ import re
 import typer
 from collections import defaultdict
 import pandas as pd
-from datetime import date
+from datetime import date, datetime
 
 DATA_PATH = Path('../data/pdfs')
 REPORT_PATH = Path(f'../data/csv_reports/crime_report_{date.today()}.csv')
@@ -44,11 +44,10 @@ def extract_components(file_path: Path = DATA_PATH / 'crime_report_8.2.2022.pdf'
         dates = DATE_RE.findall(main_body)
         for idx, date in enumerate(dates):
             if date[1] != '':
-                datetime_range = pd.date_range(start=date[0] + '/2022', end=date[1] + '/2022').to_series().tolist()
-                datetime_range_str = [date.strftime('%m/%d/%Y') for date in datetime_range]
-                dates[idx] = datetime_range_str[0]
+                datetime_range = pd.date_range(start=date[0] + '/2022', end=date[1] + '/2022').date.tolist()
+                dates[idx] = datetime_range[0]
             else:
-                dates[idx] = date[0] + '/2022'
+                dates[idx] = datetime.strptime(date[0] + '/2022', '%m/%d/%Y').date()
         descriptions = TEXT_AFTER_DATE_RE.findall(main_body)
         descriptions = [text.replace('\n', '') for text in descriptions]
         category = CATEGORY_RE.match(main_body).group()
