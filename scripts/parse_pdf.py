@@ -5,21 +5,22 @@ import typer
 from collections import defaultdict
 import pandas as pd
 from datetime import date, datetime
+from unicodedata import normalize
 
 DATA_PATH = Path('../data/pdfs')
 REPORT_PATH = Path(f'../data/csv_reports/crime_report_{date.today()}.csv')
 
-CATEGORY_RE = re.compile(r'(.*)(?=:)')
-ADDRESS_RE = re.compile(r'(\d{1,5}.+)(?=,\s\d)')
+CATEGORY_RE = re.compile(r'(.*):(?!\S)')
+ADDRESS_RE = re.compile(r'(\d{1,5}.+),\s*\d{1,2}/')
 DATE_RE = re.compile(r'(\d{1,2}\/\d{1,2}).{1,3}(\d{1,2}\/\d{1,2})?')
-TEXT_AFTER_DATE_RE = re.compile(r"(?<=\d,)\s*([^\.]*)")
+TEXT_AFTER_DATE_RE = re.compile(r"\d,([^.]+)")
 
 def parse_pdf(file_path: Path) -> str:
     text = extract_text(file_path)
     return text
 
 
-def extract_components(file_path: Path = DATA_PATH / 'crime_report_8.2.2022.pdf') -> dict:
+def extract_components(file_path: Path = DATA_PATH / '8.8.2022.pdf') -> dict:
     '''
     Uses regular expressions to extract dates, addresses, crime descriptions from the text
     :param text:
@@ -29,7 +30,9 @@ def extract_components(file_path: Path = DATA_PATH / 'crime_report_8.2.2022.pdf'
 
     text_reduced = re.sub(r'Arrests:((.|\n)*)', '', text)   # remove arrests
     text_reduced = re.sub(r'(Crime.*)', '', text_reduced)
-    headers = re.findall(CATEGORY_RE, text_reduced)         # find headers
+    text_norm = normalize('NFKD', text_reduced)
+    text_norm = re.sub(r'\d{1,2}:\d{2}\s[ap]\.?m\.?', '', text_norm)      #remove times
+    headers = re.findall(CATEGORY_RE, text_norm)         # find headers
     cleaned_headers = [header.strip() for header in headers if header != '']
     header_count = len(cleaned_headers)
     report_dict = defaultdict(list)
@@ -67,7 +70,7 @@ def create_csv() -> None:
     report_dict = extract_components()
     df = pd.DataFrame(report_dict)
     df = df.explode(['address', 'date', 'description'])
-    df.to_csv(REPORT_PATH, index=False, header=False)
+    df.to_csv(REPORT_PATH, index=False)
 
 if __name__ == '__main__':
     typer.run(create_csv)
