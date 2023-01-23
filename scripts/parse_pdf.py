@@ -3,7 +3,7 @@ from pathlib import Path
 import re
 import typer
 from collections import defaultdict
-import pandas as pd
+from pandas import date_range, DataFrame
 from datetime import date, datetime
 from unicodedata import normalize
 
@@ -47,7 +47,7 @@ def extract_components(file_path: Path = DATA_PATH / '8.8.2022.pdf') -> dict:
         dates = DATE_RE.findall(main_body)
         for idx, date in enumerate(dates):
             if date[1] != '':
-                datetime_range = pd.date_range(start=date[0] + '/2022', end=date[1] + '/2022').date.tolist()
+                datetime_range = date_range(start=date[0] + '/2022', end=date[1] + '/2022').date.tolist()
                 dates[idx] = datetime_range[0]
             else:
                 dates[idx] = datetime.strptime(date[0] + '/2022', '%m/%d/%Y').date()
@@ -63,12 +63,12 @@ def extract_components(file_path: Path = DATA_PATH / '8.8.2022.pdf') -> dict:
 
 def create_csv() -> None:
     '''
-    Creates a json schema from the dictionary of dates, addresses, and crime descriptions
+    Creates a csv file from the dictionary of dates, addresses, and crime descriptions
     :param report_dict:
     :return: csv file
     '''
     report_dict = extract_components()
-    df = pd.DataFrame(report_dict)
+    df = DataFrame(report_dict)
     df = df.explode(['address', 'date', 'description'])
     df.to_csv(REPORT_PATH, index=False)
 
