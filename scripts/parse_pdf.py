@@ -53,7 +53,7 @@ def extract_components(file_path: Path = DATA_PATH / '8.8.2022.pdf') -> dict:
                 dates[idx] = datetime.strptime(date[0] + '/2022', '%m/%d/%Y').date()
         descriptions = TEXT_AFTER_DATE_RE.findall(main_body)
         descriptions = [text.replace('\n', '') for text in descriptions]
-        category = CATEGORY_RE.match(main_body).group()
+        category = cleaned_headers[i]
         category_dict = {'category': category, 'address': addresses, 'date': dates, 'description': descriptions}
         for key, value in category_dict.items():
             report_dict[key].append(value)
