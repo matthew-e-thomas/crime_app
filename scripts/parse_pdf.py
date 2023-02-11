@@ -31,7 +31,7 @@ def extract_components(file_path: Path = DATA_PATH / '8.8.2022.pdf') -> dict:
     text_reduced = re.sub(r'Arrests:((.|\n)*)', '', text)   # remove arrests
     text_reduced = re.sub(r'(Crime.*)', '', text_reduced)
     text_norm = normalize('NFKD', text_reduced)
-    text_norm = re.sub(r'\d{1,2}:\d{2}\s[ap]\.?m\.?', '', text_norm)      #remove times
+    text_norm = re.sub(r'\d{1,2}:\d{2}\s[AaPp]\.?[Mm]\.?', '', text_norm)      #remove times
     headers = re.findall(CATEGORY_RE, text_norm)         # find headers
     cleaned_headers = [header.strip() for header in headers if header != '']
     header_count = len(cleaned_headers)
@@ -40,7 +40,7 @@ def extract_components(file_path: Path = DATA_PATH / '8.8.2022.pdf') -> dict:
         header_count -= 1
         if header_count > 0:
             regex_string = re.escape(cleaned_headers[i]) + r'(.|\n)*?' + re.escape(cleaned_headers[i+1])
-            main_body = re.search(regex_string, text_reduced).group()
+            main_body = re.search(regex_string, text_norm).group()
         else:
             main_body = re.search(re.escape(cleaned_headers[i]) + r'(.|\n)*', text_reduced).group()
         addresses = ADDRESS_RE.findall(main_body)
@@ -70,6 +70,7 @@ def create_csv() -> None:
     report_dict = extract_components()
     df = DataFrame(report_dict)
     df = df.explode(['address', 'date', 'description']) # separate lists into rows since each header may have several crime descriptions
+    df = df.dropna()
     df.to_csv(REPORT_PATH, index=False)
 
 if __name__ == '__main__':
