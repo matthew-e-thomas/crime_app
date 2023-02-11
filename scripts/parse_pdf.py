@@ -4,11 +4,11 @@ import re
 import typer
 from collections import defaultdict
 from pandas import date_range, DataFrame
-from datetime import date, datetime
+from datetime import datetime
 from unicodedata import normalize
 
 DATA_PATH = Path('../data/pdfs')
-REPORT_PATH = Path('../data/csv_reports/crime_report_2022-8-2.csv')
+REPORT_PATH = Path('../data/csv_reports/crime_report_2022-8-22.csv')
 
 CATEGORY_RE = re.compile(r'(.*):(?!\S)')
 ADDRESS_RE = re.compile(r'(\d{1,5}.+),\s*\d{1,2}/')
@@ -20,7 +20,7 @@ def parse_pdf(file_path: Path) -> str:
     return text
 
 
-def extract_components(file_path: Path = DATA_PATH / '8.2.2022.pdf') -> dict:
+def extract_components(file_path: Path = DATA_PATH / '8.22.2022.pdf') -> dict:
     '''
     Uses regular expressions to extract dates, addresses, crime descriptions from the text
     :param file_path: path to pdf file
