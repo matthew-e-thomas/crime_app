@@ -11,7 +11,7 @@ DATA_PATH = Path('../data/pdfs')
 REPORT_PATH = Path('../data/csv_reports/crime_report_2022-8-22.csv')
 
 CATEGORY_RE = re.compile(r'(.*):(?!\S)')
-ADDRESS_RE = re.compile(r'(\d{1,5}.+),\s*\d{1,2}/')
+ADDRESS_RE = re.compile(r'(\d*.+),\s*\d{1,2}/')
 DATE_RE = re.compile(r'(\d{1,2}\/\d{1,2}).{1,3}(\d{1,2}\/\d{1,2})?')
 TEXT_AFTER_DATE_RE = re.compile(r"\d,([^.]+)")
 
@@ -44,6 +44,8 @@ def extract_components(file_path: Path = DATA_PATH / '8.22.2022.pdf') -> dict:
         else:
             main_body = re.search(re.escape(cleaned_headers[i]) + r'(.|\n)*', text_reduced).group()
         addresses = ADDRESS_RE.findall(main_body)
+        if not addresses:
+            addresses = ['']
         dates = DATE_RE.findall(main_body)
         for idx, date in enumerate(dates):
             if date[1] != '':
