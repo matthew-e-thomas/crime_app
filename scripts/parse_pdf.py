@@ -8,7 +8,7 @@ from datetime import datetime
 from unicodedata import normalize
 
 DATA_PATH = Path('../data/pdfs')
-REPORT_PATH = Path('../data/csv_reports/crime_report_2022-9-6.csv')
+REPORT_PATH = Path('../data/csv_reports/')
 
 CATEGORY_RE = re.compile(r'(.*):(?!\S)')
 ADDRESS_RE = re.compile(r'(\d*.+),\s*\d{1,2}/')
@@ -20,7 +20,7 @@ def parse_pdf(file_path: Path) -> str:
     return text
 
 
-def extract_components(file_path: Path = DATA_PATH / '9.6.2022.pdf') -> dict:
+def extract_components(file_path: Path = DATA_PATH / '9.19.2022.pdf') -> dict:
     '''
     Uses regular expressions to extract dates, addresses, crime descriptions from the text
     :param file_path: path to pdf file
@@ -63,7 +63,7 @@ def extract_components(file_path: Path = DATA_PATH / '9.6.2022.pdf') -> dict:
     # print(report_dict)
     return report_dict
 
-def create_csv() -> None:
+def create_csv(file_path: Path = REPORT_PATH / 'crime_report_2022-9-19.csv' ) -> None:
     '''
     Creates a csv file from the dictionary of dates, addresses, and crime descriptions
     :param report_dict: dictionary of dates, addresses, and crime descriptions
@@ -73,7 +73,7 @@ def create_csv() -> None:
     df = DataFrame(report_dict)
     df = df.explode(['address', 'date', 'description']) # separate lists into rows since each header may have several crime descriptions
     df = df.dropna()
-    df.to_csv(REPORT_PATH, index=False)
+    df.to_csv(file_path, index=False)
 
 if __name__ == '__main__':
     typer.run(create_csv)
