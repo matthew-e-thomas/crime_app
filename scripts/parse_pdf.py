@@ -31,7 +31,7 @@ def extract_components(file_path: Path = DATA_PATH / '9.19.2022.pdf') -> dict:
     text_reduced = re.sub(r'Arrests:((.|\n)*)', '', text)   # remove arrests
     text_reduced = re.sub(r'(Crime.*)', '', text_reduced)
     text_norm = normalize('NFKD', text_reduced)
-    text_norm = re.sub(r'\d{1,2}:\d{2}\s[AaPp]\.?[Mm]\.?', '', text_norm)      #remove times
+    text_norm = re.sub(r'\d{1,2}:\d{2}\s*[AaPp]\.?[Mm]\.?', '', text_norm)      #remove times
     headers = re.findall(CATEGORY_RE, text_norm)         # find headers
     cleaned_headers = [header.strip() for header in headers if header != '']
     header_count = len(cleaned_headers)
@@ -42,7 +42,7 @@ def extract_components(file_path: Path = DATA_PATH / '9.19.2022.pdf') -> dict:
             regex_string = re.escape(cleaned_headers[i]) + r'(.|\n)*?' + re.escape(cleaned_headers[i+1])
             main_body = re.search(regex_string, text_norm).group()
         else:
-            main_body = re.search(re.escape(cleaned_headers[i]) + r'(.|\n)*', text_reduced).group()
+            main_body = re.search(re.escape(cleaned_headers[i]) + r'(.|\n)*', text_norm).group()
         addresses = ADDRESS_RE.findall(main_body)
         if not addresses:
             addresses = ['']
