@@ -20,7 +20,7 @@ def parse_pdf(file_path: Path) -> str:
     return text
 
 
-def extract_components(file_path: Path = DATA_PATH / '9.19.2022.pdf') -> dict:
+def extract_components(file_path: Path) -> dict:
     '''
     Uses regular expressions to extract dates, addresses, crime descriptions from the text
     :param file_path: path to pdf file
@@ -63,17 +63,18 @@ def extract_components(file_path: Path = DATA_PATH / '9.19.2022.pdf') -> dict:
     # print(report_dict)
     return report_dict
 
-def create_csv(file_path: Path = REPORT_PATH / 'crime_report_2022-9-19.csv' ) -> None:
+def create_csv(report_path: Path = typer.Argument(REPORT_PATH / 'crime_report_2022-9-19.csv'),
+               data_path: Path = typer.Argument(DATA_PATH / '9.19.2022.pdf')) -> None:
     '''
     Creates a csv file from the dictionary of dates, addresses, and crime descriptions
     :param report_dict: dictionary of dates, addresses, and crime descriptions
     :return: csv file
     '''
-    report_dict = extract_components()
+    report_dict = extract_components(data_path)
     df = DataFrame(report_dict)
     df = df.explode(['address', 'date', 'description']) # separate lists into rows since each header may have several crime descriptions
     df = df.dropna()
-    df.to_csv(file_path, index=False)
+    df.to_csv(report_path, index=False)
 
 if __name__ == '__main__':
     typer.run(create_csv)
