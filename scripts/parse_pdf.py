@@ -15,17 +15,18 @@ ADDRESS_RE = re.compile(r'(\d*.+),\s*\d{1,2}/')
 DATE_RE = re.compile(r'(\d{1,2}\/\d{1,2}).{1,3}(\d{1,2}\/\d{1,2})?')
 TEXT_AFTER_DATE_RE = re.compile(r"\d,([^.]+)")
 
+
 def parse_pdf(file_path: Path) -> str:
     text = extract_text(file_path)
     return text
 
 
 def extract_components(file_path: Path) -> dict:
-    '''
+    """
     Uses regular expressions to extract dates, addresses, crime descriptions from the text
     :param file_path: path to pdf file
     :return: dictionary of dates, addresses, and crime descriptions
-    '''
+    """
     text = parse_pdf(file_path)
 
     text_reduced = re.sub(r'Arrests:((.|\n)*)', '', text)   # remove arrests
@@ -63,18 +64,21 @@ def extract_components(file_path: Path) -> dict:
     # print(report_dict)
     return report_dict
 
+
 def create_csv(report_path: Path = typer.Argument(REPORT_PATH / 'crime_report_2022-9-19.csv'),
                data_path: Path = typer.Argument(DATA_PATH / '9.19.2022.pdf')) -> None:
-    '''
+    """
     Creates a csv file from the dictionary of dates, addresses, and crime descriptions
-    :param report_dict: dictionary of dates, addresses, and crime descriptions
+    :param report_path: path to the csv of parsed data
+    :param data_path: path to the pdf taken from the website
     :return: csv file
-    '''
+    """
     report_dict = extract_components(data_path)
     df = DataFrame(report_dict)
     df = df.explode(['address', 'date', 'description']) # separate lists into rows since each header may have several crime descriptions
     df = df.dropna()
     df.to_csv(report_path, index=False)
+
 
 if __name__ == '__main__':
     typer.run(create_csv)
