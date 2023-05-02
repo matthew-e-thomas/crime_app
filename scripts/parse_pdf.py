@@ -7,13 +7,13 @@ from pandas import date_range, DataFrame
 from datetime import datetime
 from unicodedata import normalize
 
-DATA_PATH = Path('../data/pdfs')
-REPORT_PATH = Path('../data/csv_reports/')
+DATA_PATH = Path(__file__).parent.parent / 'data/pdfs/'
+REPORT_PATH = Path(__file__).parent.parent / 'data/csv_reports/'
 
 CATEGORY_RE = re.compile(r'(.*):(?!\S)')
 ADDRESS_RE = re.compile(r'(\d*.+),\s*\d{1,2}/')
 DATE_RE = re.compile(r'(\d{1,2}\/\d{1,2}).{1,3}(\d{1,2}\/\d{1,2})?')
-TEXT_AFTER_DATE_RE = re.compile(r"\d,([^.]+)")
+TEXT_AFTER_DATE_RE = re.compile(r'\/\d{1,2},([^.]+)')
 
 
 def parse_pdf(file_path: Path) -> str:
@@ -65,8 +65,8 @@ def extract_components(file_path: Path) -> dict:
     return report_dict
 
 
-def create_csv(report_path: Path = typer.Argument(REPORT_PATH / 'crime_report_2022-9-19.csv'),
-               data_path: Path = typer.Argument(DATA_PATH / '9.19.2022.pdf')) -> None:
+def create_csv(report_path: Path = typer.Argument(REPORT_PATH / 'crime_report_2023-2-6.csv'),
+               data_path: Path = typer.Argument(DATA_PATH / '2.6.2023.pdf')) -> None:
     """
     Creates a csv file from the dictionary of dates, addresses, and crime descriptions
     :param report_path: path to the csv of parsed data
